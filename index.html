@@ -1362,272 +1362,260 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Card slider functionality
-      const cards = document.querySelectorAll('.card');
-      const pagination = document.querySelector('.pagination');
-      const cardsWrapper = document.querySelector('.cards-wrapper');
-      const swipeIndicator = document.querySelector('.swipe-indicator');
-      const surpriseCard = document.querySelector('.surprise-card');
-      
-      let activeCardIndex = 0;
-      let startX, moveX;
-      let revealed = false;
-      
-      // Initialize cards
-      function initCards() {
-        cards.forEach((card, index) => {
-          if (index === activeCardIndex) {
-            card.classList.add('active');
-            card.classList.add('animate');
-          } else if (index < activeCardIndex) {
-            card.classList.add('prev');
-          }
-        });
-        
-        // Create pagination with limited dots and counter
-        updatePagination();
-        
-        updateCardAnimation();
+  // Card slider functionality
+  const cards = document.querySelectorAll('.card');
+  const pagination = document.querySelector('.pagination');
+  const cardsWrapper = document.querySelector('.cards-wrapper');
+  const swipeIndicator = document.querySelector('.swipe-indicator');
+  const surpriseCard = document.querySelector('.surprise-card');
+  
+  let activeCardIndex = 0;
+  let startX, moveX;
+  let revealed = false;
+  let canSwipe = false;  // Flag to track swipe functionality
+  
+  // Initialize cards
+  function initCards() {
+    cards.forEach((card, index) => {
+      if (index === activeCardIndex) {
+        card.classList.add('active');
+        card.classList.add('animate');
+      } else if (index < activeCardIndex) {
+        card.classList.add('prev');
       }
-      
-      // Update pagination - show only 5 dots at a time
-      function updatePagination() {
-        // Clear pagination
-        pagination.innerHTML = '';
-        
-        // Add card counter
-        const paginationText = document.createElement('div');
-        paginationText.classList.add('pagination-text');
-        paginationText.textContent = `${activeCardIndex + 1}/${cards.length}`;
-        pagination.appendChild(paginationText);
-        
-        // Calculate which dots to show (max 5)
-        const maxDots = 5;
-        let startDot = Math.max(0, activeCardIndex - Math.floor(maxDots / 2));
-        let endDot = Math.min(cards.length - 1, startDot + maxDots - 1);
-        
-        // Adjust startDot if we're near the end
-        if (endDot - startDot < maxDots - 1) {
-          startDot = Math.max(0, endDot - maxDots + 1);
-        }
-        
-        // Create dots
-        for (let i = startDot; i <= endDot; i++) {
-          const dot = document.createElement('div');
-          dot.classList.add('dot');
-          if (i === activeCardIndex) {
-            dot.classList.add('active');
-          }
-          pagination.appendChild(dot);
-        }
-      }
-      
-      // Go to specific card
-      function goToCard(index) {
-        // Only allow going to the next card or previous card (one by one)
-        if (index !== activeCardIndex + 1 && index !== activeCardIndex - 1 && index !== 0 && activeCardIndex !== 0) {
-          return;
-        }
-        
-        // Remove classes from current active card
-        cards[activeCardIndex].classList.remove('active', 'animate');
-        
-        // Update active index
-        activeCardIndex = index;
-        
-        // Reset all cards
-        cards.forEach((card, i) => {
-          card.classList.remove('prev');
-          if (i < activeCardIndex) {
-            card.classList.add('prev');
-          }
-        });
-        
-        // Add classes to new active card
-        cards[activeCardIndex].classList.add('active', 'animate');
-        
-        // Update pagination
-        updatePagination();
-        
-        updateCardAnimation();
-      }
-      
-      // Next card
-      function nextCard() {
-        if (activeCardIndex < cards.length - 1) {
-          goToCard(activeCardIndex + 1);
-        }
-      }
-      
-      // Previous card
-      function prevCard() {
-        if (activeCardIndex > 0) {
-          goToCard(activeCardIndex - 1);
-        }
-      }
-      
-      // Update card animation
-      function updateCardAnimation() {
-        const activeCard = cards[activeCardIndex];
-        const animation = activeCard.getAttribute('data-animation');
-        activeCard.classList.add('animate');
-      }
-      
-      // Touch events for swipe
-      cardsWrapper.addEventListener('touchstart', function(e) {
-        startX = e.touches[0].clientX;
-      });
-      
-      cardsWrapper.addEventListener('touchmove', function(e) {
-        if (!startX) return;
-        moveX = e.touches[0].clientX;
-      });
-      
-      cardsWrapper.addEventListener('touchend', function(e) {
-        if (!startX || !moveX) return;
-        
-        const diffX = startX - moveX;
-        const threshold = 50; // minimum distance to be considered a swipe
-        
-        if (Math.abs(diffX) > threshold) {
-          if (diffX > 0) {
-            // Swipe left, go to next card
-            nextCard();
-          } else {
-            // Swipe right, go to previous card
-            prevCard();
-          }
-        }
-        
-        // Reset values
-        startX = null;
-        moveX = null;
-      });
-      
-      // Mouse events for swipe (desktop)
-      cardsWrapper.addEventListener('mousedown', function(e) {
-        startX = e.clientX;
-      });
-      
-      cardsWrapper.addEventListener('mousemove', function(e) {
-        if (!startX) return;
-        moveX = e.clientX;
-      });
-      
-      cardsWrapper.addEventListener('mouseup', function(e) {
-        if (!startX || !moveX) return;
-        
-        const diffX = startX - moveX;
-        const threshold = 50; // minimum distance to be considered a swipe
-        
-        if (Math.abs(diffX) > threshold) {
-          if (diffX > 0) {
-            // Swipe left, go to next card
-            nextCard();
-          } else {
-            // Swipe right, go to previous card
-            prevCard();
-          }
-        }
-        
-        // Reset values
-        startX = null;
-        moveX = null;
-      });
-      
-      cardsWrapper.addEventListener('mouseleave', function() {
-        startX = null;
-        moveX = null;
-      });
-      
-      // Surprise card click handler
-      if (surpriseCard) {
-        surpriseCard.addEventListener('click', function() {
-          if (!revealed) {
-            this.classList.add('flipped');
-            revealed = true;
-            
-            // Hide swipe indicator after a short delay
-            setTimeout(function() {
-              if (swipeIndicator) {
-                swipeIndicator.style.opacity = '0';
-              }
-            }, 1000);
-            
-            // Create confetti effect
-            setTimeout(function() {
-              confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 }
-              });
-            }, 800);
-            
-            // Create multiple confetti bursts
-            setTimeout(function() {
-              confetti({
-                particleCount: 50,
-                angle: 60,
-                spread: 55,
-                origin: { x: 0 }
-              });
-            }, 1000);
-            
-            setTimeout(function() {
-              confetti({
-                particleCount: 50,
-                angle: 120,
-                spread: 55,
-                origin: { x: 1 }
-              });
-            }, 1200);
-          }
-        });
-      }
-      
-      // Create confetti elements
-      function createConfetti() {
-        const container = document.querySelector('.surprise-card-back');
-        if (!container) return;
-        
-        for (let i = 0; i < 50; i++) {
-          const confetti = document.createElement('div');
-          confetti.classList.add('confetti');
-          confetti.style.left = Math.random() * 100 + '%';
-          confetti.style.backgroundColor = ['#f8a5c2', '#ffb7d5', '#ffd7e9', '#ffffff'][Math.floor(Math.random() * 4)];
-          confetti.style.width = Math.random() * 10 + 5 + 'px';
-          confetti.style.height = Math.random() * 10 + 5 + 'px';
-          confetti.style.animationDelay = Math.random() * 5 + 's';
-          confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
-          container.appendChild(confetti);
-        }
-      }
-      
-      // Initialize
-      initCards();
-      createConfetti();
-      
-      // Make name editable
-      const titleElement = document.querySelector('.birthday-title');
-      if (titleElement) {
-        titleElement.addEventListener('click', function() {
-          const currentName = titleElement.textContent.replace('Happy Birthday, ', '').replace('!', '');
-          const newName = prompt('Enter the birthday person\'s name:', currentName);
-          if (newName && newName.trim() !== '') {
-            titleElement.textContent = `Happy Birthday, ${newName}!`;
-          }
-        });
-      }
-      
-      // Keyboard navigation
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'ArrowRight') {
-          nextCard();
-        } else if (e.key === 'ArrowLeft') {
-          prevCard();
-        }
-      });
     });
+    
+    // Create pagination with limited dots and counter
+    updatePagination();
+    
+    updateCardAnimation();
+  }
+  
+  // Update pagination - show only 5 dots at a time
+  function updatePagination() {
+    // Clear pagination
+    pagination.innerHTML = '';
+    
+    // Add card counter
+    const paginationText = document.createElement('div');
+    paginationText.classList.add('pagination-text');
+    paginationText.textContent = `${activeCardIndex + 1}/${cards.length}`;
+    pagination.appendChild(paginationText);
+    
+    // Calculate which dots to show (max 5)
+    const maxDots = 5;
+    let startDot = Math.max(0, activeCardIndex - Math.floor(maxDots / 2));
+    let endDot = Math.min(cards.length - 1, startDot + maxDots - 1);
+    
+    // Adjust startDot if we're near the end
+    if (endDot - startDot < maxDots - 1) {
+      startDot = Math.max(0, endDot - maxDots + 1);
+    }
+    
+    // Create dots
+    for (let i = startDot; i <= endDot; i++) {
+      const dot = document.createElement('div');
+      dot.classList.add('dot');
+      if (i === activeCardIndex) {
+        dot.classList.add('active');
+      }
+      pagination.appendChild(dot);
+    }
+  }
+  
+  // Go to specific card
+  function goToCard(index) {
+    // Only allow going to the next card or previous card (one by one)
+    if (index !== activeCardIndex + 1 && index !== activeCardIndex - 1 && index !== 0 && activeCardIndex !== 0) {
+      return;
+    }
+    
+    // Remove classes from current active card
+    cards[activeCardIndex].classList.remove('active', 'animate');
+    
+    // Update active index
+    activeCardIndex = index;
+    
+    // Reset all cards
+    cards.forEach((card, i) => {
+      card.classList.remove('prev');
+      if (i < activeCardIndex) {
+        card.classList.add('prev');
+      }
+    });
+    
+    // Add classes to new active card
+    cards[activeCardIndex].classList.add('active', 'animate');
+    
+    // Update pagination
+    updatePagination();
+    
+    updateCardAnimation();
+  }
+  
+  // Next card
+  function nextCard() {
+    if (activeCardIndex < cards.length - 1) {
+      goToCard(activeCardIndex + 1);
+    }
+  }
+  
+  // Previous card
+  function prevCard() {
+    if (activeCardIndex > 0) {
+      goToCard(activeCardIndex - 1);
+    }
+  }
+  
+  // Update card animation
+  function updateCardAnimation() {
+    const activeCard = cards[activeCardIndex];
+    const animation = activeCard.getAttribute('data-animation');
+    activeCard.classList.add('animate');
+  }
+  
+  // Touch events for swipe
+  cardsWrapper.addEventListener('touchstart', function(e) {
+    if (!canSwipe) return;  // Prevent swipe if not allowed
+    startX = e.touches[0].clientX;
+  });
+  
+  cardsWrapper.addEventListener('touchmove', function(e) {
+    if (!canSwipe || !startX) return;  // Prevent swipe if not allowed
+    moveX = e.touches[0].clientX;
+  });
+  
+  cardsWrapper.addEventListener('touchend', function(e) {
+    if (!canSwipe || !startX || !moveX) return;  // Prevent swipe if not allowed
+    
+    const diffX = startX - moveX;
+    const threshold = 50; // minimum distance to be considered a swipe
+    
+    if (Math.abs(diffX) > threshold) {
+      if (diffX > 0) {
+        // Swipe left, go to next card
+        nextCard();
+      } else {
+        // Swipe right, go to previous card
+        prevCard();
+      }
+    }
+    
+    // Reset values
+    startX = null;
+    moveX = null;
+  });
+  
+  // Mouse events for swipe (desktop)
+  cardsWrapper.addEventListener('mousedown', function(e) {
+    if (!canSwipe) return;  // Prevent swipe if not allowed
+    startX = e.clientX;
+  });
+  
+  cardsWrapper.addEventListener('mousemove', function(e) {
+    if (!canSwipe || !startX) return;  // Prevent swipe if not allowed
+    moveX = e.clientX;
+  });
+  
+  cardsWrapper.addEventListener('mouseup', function(e) {
+    if (!canSwipe || !startX || !moveX) return;  // Prevent swipe if not allowed
+    
+    const diffX = startX - moveX;
+    const threshold = 50; // minimum distance to be considered a swipe
+    
+    if (Math.abs(diffX) > threshold) {
+      if (diffX > 0) {
+        // Swipe left, go to next card
+        nextCard();
+      } else {
+        // Swipe right, go to previous card
+        prevCard();
+      }
+    }
+    
+    // Reset values
+    startX = null;
+    moveX = null;
+  });
+  
+  cardsWrapper.addEventListener('mouseleave', function() {
+    startX = null;
+    moveX = null;
+  });
+  
+  // Surprise card click handler
+  if (surpriseCard) {
+    surpriseCard.addEventListener('click', function() {
+      if (!revealed) {
+        this.classList.add('flipped');
+        revealed = true;
+        
+        // Enable swipe after first card is revealed
+        canSwipe = true;
+        
+        // Hide swipe indicator after a short delay
+        setTimeout(function() {
+          if (swipeIndicator) {
+            swipeIndicator.style.opacity = '0';
+          }
+        }, 1000);
+        
+        // Create confetti effect
+        setTimeout(function() {
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+        }, 800);
+        
+        // Create multiple confetti bursts
+        setTimeout(function() {
+          confetti({
+            particleCount: 50,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 }
+          });
+        }, 1000);
+        
+        setTimeout(function() {
+          confetti({
+            particleCount: 50,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 }
+          });
+        }, 1200);
+      }
+    });
+  }
+  
+  // Initialize
+  initCards();
+  
+  // Make name editable
+  const titleElement = document.querySelector('.birthday-title');
+  if (titleElement) {
+    titleElement.addEventListener('click', function() {
+      const currentName = titleElement.textContent.replace('Happy Birthday, ', '').replace('!', '');
+      const newName = prompt('Enter the birthday person\'s name:', currentName);
+      if (newName && newName.trim() !== '') {
+        titleElement.textContent = `Happy Birthday, ${newName}!`;
+      }
+    });
+  }
+  
+  // Keyboard navigation
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight') {
+      nextCard();
+    } else if (e.key === 'ArrowLeft') {
+      prevCard();
+    }
+  });
+});
+
   </script>
 </body>
 </html>
